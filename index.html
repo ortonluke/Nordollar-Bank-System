@@ -39,8 +39,18 @@
       const user = data[0]
 
       if(user.pin === pin) {
-        document.getElementById("output").textContent = 
-          `Welcome ${user.name}! Your balance: ${user.balance}`
+        // temp output for demo
+        document.getElementById("output").textContent = `Welcome, ${user.name}! Your balance is $${user.balance}.`
+
+        // Successful login, go to account dashboard
+        localStorage.setItem("nordollar_user", JSON.stringify({
+        username: user.name,
+        balance: user.balance,
+        account_id: user.id
+        }));
+
+        window.location.href = "account.html";
+
       } else {
         document.getElementById("output").textContent = "Incorrect PIN"
       }

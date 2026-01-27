@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nordollars Account</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    h1 { margin-bottom: 20px; }
+    .balance { font-size: 1.5em; margin: 20px 0; }
+    button { padding: 10px 20px; margin: 10px; font-size: 1em; }
+  </style>
+</head>
+<body>
+
+  <h1>Nordollars Account</h1>
+  <p>Welcome, <span id="username">User</span>!</p>
+  <p class="balance">Balance: $<span id="balance">0</span></p>
+
+  <button id="payBtn">Pay</button>
+  <button id="requestBtn">Request</button>
+  <br><br>
+  <button id="logoutBtn">Logout</button>
+
+  <script>
+    // Load logged-in user from localStorage
+    const user = JSON.parse(localStorage.getItem("nordollar_user"));
+
+    if (!user) {
+      // Not logged in → back to login page
+      window.location.href = "index.html";
+    }
+
+    // Display user info
+    document.getElementById("username").textContent = user.username;
+    document.getElementById("balance").textContent = user.balance;
+
+    // Logout button
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("nordollar_user");
+      window.location.href = "index.html";
+    });
+
+    // Pay / Request buttons (for now, just alerts)
+    document.getElementById("payBtn").addEventListener("click", () => {
+      alert("Pay button clicked — functionality coming soon!");
+    });
+
+    document.getElementById("requestBtn").addEventListener("click", () => {
+      alert("Request button clicked — functionality coming soon!");
+    });
+  </script>
+
+</body>
+</html>
