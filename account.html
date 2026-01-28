@@ -18,37 +18,199 @@
 
   <button id="payBtn">Pay</button>
   <button id="requestBtn">Request</button>
+
   <br><br>
   <button id="logoutBtn">Logout</button>
 
   <script>
-    // Load logged-in user from localStorage
-    const user = JSON.parse(localStorage.getItem("nordollar_user"));
+    const SUPABASE_URL = "https://fjgbygqbwxtldeptngyq.supabase.co"
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZ2J5Z3Fid3h0bGRlcHRuZ3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1MzkyOTUsImV4cCI6MjA4NTExNTI5NX0.BlPaxorKFOUhz4Y2ahtoUvlDJTaMna6cSNX6ncBrlYk"
+  console.log("Account page script loaded");
 
-    if (!user) {
-      // Not logged in → back to login page
-      window.location.href = "index.html";
+  // Load logged-in user
+  const user = JSON.parse(localStorage.getItem("nordollar_user"));
+  console.log("Loaded user:", user);
+
+  if (!user) {
+    console.warn("No user found, redirecting to login");
+    window.location.href = "index.html";
+  }
+
+  document.getElementById("username").textContent = user.username;
+  document.getElementById("balance").textContent = user.balance;
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("nordollar_user");
+    window.location.href = "index.html";
+  });
+
+  document.getElementById("payBtn").addEventListener("click", () => {
+    console.log("Pay button clicked");
+
+    if (document.getElementById("payForm")) {
+      console.log("Pay form already exists");
+      return;
     }
 
-    // Display user info
-    document.getElementById("username").textContent = user.username;
-    document.getElementById("balance").textContent = user.balance;
+    const form = document.createElement("div");
+    form.id = "payForm";
+    form.innerHTML = `
+      <h3>Send Nordollars</h3>
+      <label>To (username): <input type="text" id="payTo"></label><br>
+      <label>Amount: <input type="number" id="payAmount" min="1"></label><br>
+      <button id="submitPay">Send</button>
+      <button id="cancelPay">Cancel</button>
+      <p id="payMessage"></p>
+    `;
 
-    // Logout button
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.removeItem("nordollar_user");
-      window.location.href = "index.html";
-    });
+    document.body.appendChild(form);
 
-    // Pay / Request buttons (for now, just alerts)
-    document.getElementById("payBtn").addEventListener("click", () => {
-      alert("Pay button clicked — functionality coming soon!");
-    });
+    document.getElementById("cancelPay").onclick = () => {
+      console.log("Pay cancelled");
+      form.remove();
+    };
 
-    document.getElementById("requestBtn").addEventListener("click", () => {
-      alert("Request button clicked — functionality coming soon!");
-    });
-  </script>
+    document.getElementById("submitPay").onclick = async () => {
+      const toUsername = document.getElementById("payTo").value.trim();
+      const amount = Number(document.getElementById("payAmount").value);
+
+      console.log("Submit clicked:", { toUsername, amount });
+
+      if (!toUsername || amount <= 0) {
+        document.getElementById("payMessage").textContent = "Invalid input";
+        return;
+      }
+
+      await payUser(user.account_id, toUsername, amount);
+    };
+  });
+
+  let paying = false;
+
+  async function payUser(fromId, toUsername, amount) {
+    console.log("payUser called");
+
+    if (paying) {
+      console.warn("Already paying, aborting");
+      return;
+    }
+
+    paying = true;
+    const output = document.getElementById("payMessage");
+    output.textContent = "Processing payment...";
+
+    try {
+      // Find recipient
+      console.log("Looking up recipient:", toUsername);
+
+      const resTo = await fetch(
+        `${SUPABASE_URL}/rest/v1/accounts?name=eq.${encodeURIComponent(toUsername)}`,
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`
+          }
+        }
+      );
+
+      console.log("Recipient lookup status:", resTo.status);
+
+      if (!resTo.ok) {
+        output.textContent = "Failed to fetch recipient";
+        console.error(await resTo.text());
+        return;
+      }
+
+      const toData = await resTo.json();
+      console.log("Recipient data:", toData);
+
+      if (toData.length === 0) {
+        output.textContent = "Recipient not found";
+        return;
+      }
+
+      const toUser = toData[0];
+
+      // 💰 Balance check
+      console.log("Checking balance:", user.balance, "Amount:", amount);
+
+      if (user.balance < amount) {
+        output.textContent = "Insufficient funds";
+        return;
+      }
+
+      // Update sender
+      console.log("Updating sender balance");
+
+      const resFrom = await fetch(
+        `${SUPABASE_URL}/rest/v1/accounts?id=eq.${fromId}`,
+        {
+          method: "PATCH",
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": "application/json",
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify({ balance: user.balance - amount })
+        }
+      );
+
+      console.log("Sender update status:", resFrom.status);
+
+      if (!resFrom.ok) {
+        output.textContent = "Sender update failed";
+        console.error(await resFrom.text());
+        return;
+      }
+
+      // Update recipient
+      console.log("Updating recipient balance");
+
+      const resToUser = await fetch(
+        `${SUPABASE_URL}/rest/v1/accounts?id=eq.${toUser.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": "application/json",
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify({ balance: toUser.balance + amount })
+        }
+      );
+
+      console.log("Recipient update status:", resToUser.status);
+
+      if (!resToUser.ok) {
+        output.textContent = "Recipient update failed";
+        console.error(await resToUser.text());
+        return;
+      }
+
+      // Local update
+      user.balance -= amount;
+      localStorage.setItem("nordollar_user", JSON.stringify(user));
+      document.getElementById("balance").textContent = user.balance;
+
+      output.textContent = `Sent $${amount} to ${toUser.name}!`;
+      console.log("Payment complete");
+
+      document.getElementById("payForm").remove();
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      output.textContent = "Unexpected error — check console";
+    } finally {
+      paying = false;
+      console.log("paying flag reset");
+    }
+  }
+
+  document.getElementById("requestBtn").addEventListener("click", () => {
+    alert("Request button clicked — functionality coming soon!");
+  });
+</script>
 
 </body>
 </html>
