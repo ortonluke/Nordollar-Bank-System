@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nordollars Bank</title>
+</head>
+<body>
+  <h1>Create Nordollar Account</h1>
+
+  <label>Username: <input type="text" id="username"></label><br>
+  <label>PIN: <input type="password" id="pin"></label><br>
+  <label>Initial Balance: <input type="number" id="initialBalance" min="0"></label><br>
+
+  <button id="newAccountBtn">Create Account</button>
+
+  <div id="output"></div>
+</body>
+<script>
+    const SUPABASE_URL = "https://fjgbygqbwxtldeptngyq.supabase.co"
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZ2J5Z3Fid3h0bGRlcHRuZ3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1MzkyOTUsImV4cCI6MjA4NTExNTI5NX0.BlPaxorKFOUhz4Y2ahtoUvlDJTaMna6cSNX6ncBrlYk"
+
+  const newAccountBtn = document.getElementById("newAccountBtn");
+  const output = document.getElementById("output"); // Add a <p id="output"></p> for messages
+
+  newAccountBtn.addEventListener("click", async () => {
+    const username = document.getElementById("username").value.trim();
+    const pin = document.getElementById("pin").value.trim();
+    const initialBalance = Number(document.getElementById("initialBalance").value);
+
+    if (!username || pin.length < 4 || initialBalance < 0) {
+      output.textContent = "Invalid input: username required, PIN ≥4, balance ≥0";
+      return;
+    }
+
+    try {
+      // Check username exists
+      const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/accounts?name=eq.${encodeURIComponent(username)}`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      const dataCheck = await resCheck.json();
+      if (dataCheck.length > 0) {
+        output.textContent = "Username already taken";
+        return;
+      }
+
+      // Insert new account
+      const resInsert = await fetch(`${SUPABASE_URL}/rest/v1/accounts`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: username,
+          pin: pin,
+          balance: initialBalance
+        })
+      });
+
+      if (!resInsert.ok) {
+        const errText = await resInsert.text();
+        console.error(errText);
+        output.textContent = "Failed to create account — check console";
+        return;
+      }
+
+      output.textContent = `Account created successfully! Redirecting to login...`;
+      setTimeout(() => window.location.href = "index.html", 2000);
+
+    } catch (err) {
+      console.error(err);
+      output.textContent = "Unexpected error — check console";
+    }
+  });
+</script>
+
+</html>
