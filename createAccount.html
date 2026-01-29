@@ -2,17 +2,62 @@
 <html>
 <head>
   <title>Nordollars Bank</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Create Nordollar Account</h1>
+  <section class="hero is-brand">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <p class="badge mb-3">Nordollars Bank</p>
+        <h1 class="title is-3 nordollars-header">Create Account</h1>
+        <p class="subtitle is-6">Open a new Nordollars account in minutes</p>
+      </div>
+    </div>
+  </section>
 
-  <label>Username: <input type="text" id="username"></label><br>
-  <label>PIN: <input type="password" id="pin"></label><br>
-  <label>Initial Balance: <input type="number" id="initialBalance" min="0"></label><br>
+  <section class="section">
+    <div class="container">
+      <div class="card is-soft form-card">
+        <div class="card-content">
+          <h2 class="title is-4">New account details</h2>
+          <p class="helper-text mb-4">Choose a username, PIN, and starting balance.</p>
 
-  <button id="newAccountBtn">Create Account</button>
+          <div class="field">
+            <label class="label">Username</label>
+            <div class="control">
+              <input class="input" type="text" id="username" placeholder="e.g. Alex">
+            </div>
+          </div>
 
-  <div id="output"></div>
+          <div class="field">
+            <label class="label">PIN</label>
+            <div class="control">
+              <input class="input" type="password" id="pin" placeholder="Minimum 4 digits">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Initial Balance</label>
+            <div class="control">
+              <input class="input" type="number" id="initialBalance" min="0" placeholder="0">
+            </div>
+          </div>
+
+          <div class="field is-grouped is-grouped-right">
+            <div class="control">
+              <button class="button is-brand" id="newAccountBtn">Create Account</button>
+            </div>
+            <div class="control">
+              <button class="button is-light" onclick="window.location.href='index.html'">Back to Login</button>
+            </div>
+          </div>
+
+          <div id="output" class="notification is-light mt-4" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 </body>
 <script>
     const SUPABASE_URL = "https://fjgbygqbwxtldeptngyq.supabase.co"
@@ -28,6 +73,8 @@
 
     if (!username || pin.length < 4 || initialBalance < 0) {
       output.textContent = "Invalid input: username required, PIN ≥4, balance ≥0";
+      output.style.display = "block";
+      output.classList.add("is-danger");
       return;
     }
 
@@ -39,6 +86,8 @@
       const dataCheck = await resCheck.json();
       if (dataCheck.length > 0) {
         output.textContent = "Username already taken";
+        output.style.display = "block";
+        output.classList.add("is-danger");
         return;
       }
 
@@ -61,15 +110,22 @@
         const errText = await resInsert.text();
         console.error(errText);
         output.textContent = "Failed to create account — check console";
+        output.style.display = "block";
+        output.classList.add("is-danger");
         return;
       }
 
-      output.textContent = `Account created successfully! Redirecting to login...`;
+      output.textContent = "Account created successfully! Redirecting to login...";
+      output.style.display = "block";
+      output.classList.remove("is-danger");
+      output.classList.add("is-success");
       setTimeout(() => window.location.href = "index.html", 2000);
 
     } catch (err) {
       console.error(err);
       output.textContent = "Unexpected error — check console";
+      output.style.display = "block";
+      output.classList.add("is-danger");
     }
   });
 </script>

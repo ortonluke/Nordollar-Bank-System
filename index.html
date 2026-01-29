@@ -2,16 +2,55 @@
 <html>
 <head>
   <title>Nordollars Bank</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Nordollars Bank Login</h1>
+  <section class="hero is-brand">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <p class="badge mb-3">Nordollars Bank</p>
+        <h1 class="title is-3 nordollars-header">Secure Login</h1>
+        <p class="subtitle is-6">Access your Nordollars account</p>
+      </div>
+    </div>
+  </section>
 
-  <label>Username: <input type="text" id="username"></label><br>
-  <label>PIN: <input type="password" id="pin"></label><br>
-  <button id="loginBtn">Login</button>
-  <button id="newAccountBtn" onclick="window.location.href='createAccount.html'">Create Account</button>
+  <section class="section">
+    <div class="container">
+      <div class="card is-soft form-card">
+        <div class="card-content">
+          <h2 class="title is-4">Sign in</h2>
+          <p class="helper-text mb-4">Enter your username and PIN to continue.</p>
 
-  <div id="output"></div>
+          <div class="field">
+            <label class="label">Username</label>
+            <div class="control">
+              <input class="input" type="text" id="username" placeholder="e.g. Alex">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">PIN</label>
+            <div class="control">
+              <input class="input" type="password" id="pin" placeholder="••••">
+            </div>
+          </div>
+
+          <div class="field is-grouped is-grouped-right">
+            <div class="control">
+              <button class="button is-brand" id="loginBtn">Login</button>
+            </div>
+            <div class="control">
+              <button class="button is-light" id="newAccountBtn" onclick="window.location.href='createAccount.html'">Create Account</button>
+            </div>
+          </div>
+
+          <div id="output" class="notification is-light mt-4" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <script>
     const SUPABASE_URL = "https://fjgbygqbwxtldeptngyq.supabase.co"
@@ -34,7 +73,9 @@
       const data = await res.json()
 
       if(data.length === 0) {
-        document.getElementById("output").textContent = "User not found"
+        const output = document.getElementById("output")
+        output.textContent = "User not found"
+        output.style.display = "block"
         return
       }
 
@@ -42,7 +83,11 @@
 
       if(user.pin === pin) {
         // temp output for demo
-        document.getElementById("output").textContent = `Correct Login.`
+        const output = document.getElementById("output")
+        output.textContent = "Correct Login."
+        output.classList.remove("is-danger")
+        output.classList.add("is-success")
+        output.style.display = "block"
 
         // Successful login, go to account dashboard
         localStorage.setItem("nordollar_user", JSON.stringify({
@@ -55,7 +100,10 @@
         window.location.href = "account.html";
 
       } else {
-        document.getElementById("output").textContent = "Incorrect PIN"
+        const output = document.getElementById("output")
+        output.textContent = "Incorrect PIN"
+        output.classList.add("is-danger")
+        output.style.display = "block"
       }
     })
   </script>

@@ -3,25 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <title>Nordollars Account</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 50px; }
-    h1 { margin-bottom: 20px; }
-    .balance { font-size: 1.5em; margin: 20px 0; }
-    button { padding: 10px 20px; margin: 10px; font-size: 1em; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <section class="hero is-brand">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <p class="badge mb-3">Nordollars Bank</p>
+        <h1 class="title is-3 nordollars-header">Account Dashboard</h1>
+        <p class="subtitle is-6">Manage your Nordollars with confidence</p>
+      </div>
+    </div>
+  </section>
 
-  <h1>Nordollars Account</h1>
-  <p>Welcome, <span id="username">User</span>!</p>
-  <p class="balance">Balance: $<span id="balance">0</span></p>
+  <section class="section">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-6">
+          <div class="card is-soft">
+            <div class="card-content">
+              <h2 class="title is-4">Welcome, <span id="username">User</span>!</h2>
+              <p class="subtitle is-6">Balance</p>
+              <p class="title is-3 has-text-primary">$<span id="balance">0</span></p>
 
-  <button id="payBtn">Pay</button>
-  <button id="allAccountsBtn" style="display:none;">All Accounts</button>
+              <div class="buttons is-right mt-4">
+                <button class="button is-brand" id="payBtn">Pay</button>
+                <button class="button is-info" id="allAccountsBtn" style="display:none;">All Accounts</button>
+                <button class="button is-light" id="logoutBtn">Logout</button>
+              </div>
 
-
-  <br><br>
-  <button id="logoutBtn">Logout</button>
+              <div id="inlinePanels"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <script>
     const SUPABASE_URL = "https://fjgbygqbwxtldeptngyq.supabase.co"
@@ -51,20 +69,26 @@
 
   const form = document.createElement("div");
   form.id = "bankForm";
+  form.className = "box mt-4";
   form.innerHTML = `
-    <h3>Bank Action</h3>
-    <label>Amount:
-      <input type="number" id="bankAmount" min="1">
-    </label><br><br>
+    <h3 class="title is-5">Bank Action</h3>
+    <div class="field">
+      <label class="label">Amount</label>
+      <div class="control">
+        <input class="input" type="number" id="bankAmount" min="1">
+      </div>
+    </div>
 
-    <button id="giveBtn">Give to Everyone</button>
-    <button id="takeBtn">Take from Everyone</button>
-    <button id="cancelBank">Cancel</button>
+    <div class="buttons">
+      <button class="button is-success" id="giveBtn">Give to Everyone</button>
+      <button class="button is-warning" id="takeBtn">Take from Everyone</button>
+      <button class="button is-light" id="cancelBank">Cancel</button>
+    </div>
 
-    <p id="bankMessage"></p>
+    <div id="bankMessage" class="notification is-light" style="display:none;"></div>
   `;
 
-  document.body.appendChild(form);
+  document.getElementById("inlinePanels").appendChild(form);
 
   document.getElementById("cancelBank").onclick = () => form.remove();
 
@@ -98,16 +122,29 @@
 
     const form = document.createElement("div");
     form.id = "payForm";
+    form.className = "box mt-4";
     form.innerHTML = `
-      <h3>Send Nordollars</h3>
-      <label>To (username): <input type="text" id="payTo"></label><br>
-      <label>Amount: <input type="number" id="payAmount" min="1"></label><br>
-      <button id="submitPay">Send</button>
-      <button id="cancelPay">Cancel</button>
-      <p id="payMessage"></p>
+      <h3 class="title is-5">Send Nordollars</h3>
+      <div class="field">
+        <label class="label">To (username)</label>
+        <div class="control">
+          <input class="input" type="text" id="payTo">
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Amount</label>
+        <div class="control">
+          <input class="input" type="number" id="payAmount" min="1">
+        </div>
+      </div>
+      <div class="buttons">
+        <button class="button is-brand" id="submitPay">Send</button>
+        <button class="button is-light" id="cancelPay">Cancel</button>
+      </div>
+      <div id="payMessage" class="notification is-light" style="display:none;"></div>
     `;
 
-    document.body.appendChild(form);
+    document.getElementById("inlinePanels").appendChild(form);
 
     document.getElementById("cancelPay").onclick = () => {
       console.log("Pay cancelled");
@@ -121,7 +158,10 @@
       console.log("Submit clicked:", { toUsername, amount });
 
       if (!toUsername || amount <= 0) {
-        document.getElementById("payMessage").textContent = "Invalid input";
+        const msg = document.getElementById("payMessage");
+        msg.textContent = "Invalid input";
+        msg.classList.add("is-danger");
+        msg.style.display = "block";
         return;
       }
 
@@ -142,6 +182,8 @@
     paying = true;
     const output = document.getElementById("payMessage");
     output.textContent = "Processing payment...";
+    output.classList.remove("is-danger", "is-success");
+    output.style.display = "block";
 
     try {
       // Find recipient
@@ -161,6 +203,7 @@
 
       if (!resTo.ok) {
         output.textContent = "Failed to fetch recipient";
+        output.classList.add("is-danger");
         console.error(await resTo.text());
         return;
       }
@@ -170,6 +213,7 @@
 
       if (toData.length === 0) {
         output.textContent = "Recipient not found";
+        output.classList.add("is-danger");
         return;
       }
 
@@ -180,6 +224,7 @@
 
       if (user.balance < amount) {
         output.textContent = "Insufficient funds";
+        output.classList.add("is-danger");
         return;
       }
 
@@ -204,6 +249,7 @@
 
       if (!resFrom.ok) {
         output.textContent = "Sender update failed";
+        output.classList.add("is-danger");
         console.error(await resFrom.text());
         return;
       }
@@ -229,6 +275,7 @@
 
       if (!resToUser.ok) {
         output.textContent = "Recipient update failed";
+        output.classList.add("is-danger");
         console.error(await resToUser.text());
         return;
       }
@@ -239,12 +286,14 @@
       document.getElementById("balance").textContent = user.balance;
 
       output.textContent = `Sent $${amount} to ${toUser.name}!`;
+      output.classList.add("is-success");
       console.log("Payment complete");
 
       document.getElementById("payForm").remove();
     } catch (err) {
       console.error("Unexpected error:", err);
       output.textContent = "Unexpected error — check console";
+      output.classList.add("is-danger");
     } finally {
       paying = false;
       console.log("paying flag reset");
@@ -254,6 +303,8 @@
   async function bankDistribute(amount, mode) {
   const output = document.getElementById("bankMessage");
   output.textContent = "Processing...";
+  output.classList.remove("is-danger", "is-success");
+  output.style.display = "block";
 
   try {
     // Fetch all non-bank accounts
@@ -269,6 +320,7 @@
 
     if (!res.ok) {
       output.textContent = "Failed to load accounts";
+      output.classList.add("is-danger");
       return;
     }
 
@@ -298,17 +350,22 @@
       mode === "give"
         ? `Gave $${amount} to all accounts`
         : `Took $${amount} from all accounts`;
+    output.classList.add("is-success");
 
     console.log("Bank operation completed");
 
   } catch (err) {
     console.error(err);
     output.textContent = "Unexpected error";
+    output.classList.add("is-danger");
   }
 }
 
 function showBankError(msg) {
-  document.getElementById("bankMessage").textContent = msg;
+  const output = document.getElementById("bankMessage");
+  output.textContent = msg;
+  output.classList.add("is-danger");
+  output.style.display = "block";
 }
 </script>
 
