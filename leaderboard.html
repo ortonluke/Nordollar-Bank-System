@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nordollars Bank</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section class="hero is-brand">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <p class="badge mb-3">Nordollars Bank</p>
+        <h1 class="title is-3 nordollars-header">Nordollar Leaderboard</h1>
+        <p class="subtitle is-6">Know who holds the power</p>
+      </div>
+    </div>
+  </section>
+  
+    <div class="container is-flex is-justify-content-center">
+        <div id="leaderboard"></div>
+    </div>
+
+  <script>
+    const SUPABASE_URL = "https://fjgbygqbwxtldeptngyq.supabase.co"
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZ2J5Z3Fid3h0bGRlcHRuZ3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1MzkyOTUsImV4cCI6MjA4NTExNTI5NX0.BlPaxorKFOUhz4Y2ahtoUvlDJTaMna6cSNX6ncBrlYk"
+
+    async function loadLeaderboard() {
+        const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/accounts?is_bank=eq.false&select=name,balance`,
+        {
+            headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`
+            }
+        }
+        );
+
+        if (!res.ok) {
+        console.error("Failed to load leaderboard", await res.text());
+        return;
+        }
+
+        let accounts = await res.json();
+
+        // Sort by balance descending
+        accounts.sort((a, b) => b.balance - a.balance);
+
+        renderLeaderboard(accounts);
+    }
+
+  function renderLeaderboard(accounts) {
+    const container = document.getElementById("leaderboard");
+    container.innerHTML = "";
+    container.className = "leaderboard";
+
+    accounts.forEach((acct, index) => {
+      const row = document.createElement("div");
+      row.className = "leaderboard-row";
+
+      row.innerHTML = `
+        <strong>#${index + 1}</strong>
+        <span>${acct.name}</span>
+        <span>$${acct.balance}</span>
+      `;
+
+      container.appendChild(row);
+    });
+  }
+
+    loadLeaderboard();
+  </script>
+</body>
+</html>

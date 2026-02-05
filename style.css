@@ -53,3 +53,47 @@ html, body {
   border-radius: 999px;
   font-size: 0.8rem;
 }
+
+.leaderboard {
+    max-width: 500px;
+    margin: auto;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  }
+
+.leaderboard-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  font-size: 1rem;
+}
+
+.leaderboard-row strong {
+  width: 40px;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.rank {
+  font-weight: bold;
+  width: 40px;
+}
+
+.name {
+  flex: 1;
+}
+
+.balance {
+  font-weight: 600;
+}
